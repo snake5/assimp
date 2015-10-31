@@ -66,14 +66,17 @@ namespace Q3Shader {
 struct SkinData
 {
     //! A single entryin texture list
-    struct TextureEntry : public std::pair<std::string,std::string>
+    struct TextureEntry
     {
+		std::string skin;
+		std::string surf;
+
         // did we resolve this texture entry?
         bool resolved;
 
         // for std::find()
         bool operator == (const std::string& f) const {
-            return f == first;
+            return f == skin;
         }
     };
 

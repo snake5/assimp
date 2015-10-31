@@ -151,7 +151,7 @@ struct NodeDesc
 
 
     // list of resolved children
-    std::list< NodeDesc* > children;
+    std::vector< NodeDesc* > children;
 
     // resolved parent node
     NodeDesc* parent_resolved;

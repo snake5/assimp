@@ -414,8 +414,6 @@ void SplitLargeMeshesProcess_Vertex::SplitMesh(
 {
     if (pMesh->mNumVertices > SplitLargeMeshesProcess_Vertex::LIMIT)
     {
-        typedef std::vector< std::pair<unsigned int,float> > VertexWeightTable;
-
         // build a per-vertex weight list if necessary
         VertexWeightTable* avPerVertexWeights = ComputeVertexBoneWeightTable(pMesh);
 
@@ -598,12 +596,12 @@ void SplitLargeMeshesProcess_Vertex::SplitMesh(
                                 iter != table.end();++iter)
                             {
                                 // allocate the bone weight array if necessary
-                                BoneWeightList* pcWeightList = (BoneWeightList*)pcMesh->mBones[(*iter).first];
+                                BoneWeightList* pcWeightList = (BoneWeightList*)pcMesh->mBones[(*iter).bone_id];
                                 if (!pcWeightList)
                                 {
-                                    pcMesh->mBones[(*iter).first] = (aiBone*)(pcWeightList = new BoneWeightList());
+                                    pcMesh->mBones[(*iter).bone_id] = (aiBone*)(pcWeightList = new BoneWeightList());
                                 }
-                                pcWeightList->push_back(aiVertexWeight(pcMesh->mNumVertices,(*iter).second));
+                                pcWeightList->push_back(aiVertexWeight(pcMesh->mNumVertices,(*iter).weight));
                             }
                         }
                     }

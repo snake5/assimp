@@ -109,7 +109,7 @@ struct STransformVecInfo : public aiUVTransform
 
     //! Update info - shortcuts into all materials
     //! that are referencing this transform setup
-    std::list<TTUpdateInfo> updateList;
+    std::vector<TTUpdateInfo> updateList;
 
 
     // -------------------------------------------------------------------

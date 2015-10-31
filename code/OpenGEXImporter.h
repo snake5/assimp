@@ -162,8 +162,8 @@ private:
     };
 
     struct ChildInfo {
-        typedef std::list<aiNode*> NodeList;
-        std::list<aiNode*> m_children;
+        typedef std::vector<aiNode*> NodeList;
+        NodeList m_children;
     };
     ChildInfo *m_root;
     typedef std::map<aiNode*, ChildInfo*> NodeChildMap;

@@ -189,10 +189,10 @@ void TextureTransformStep::PreProcessUVTransform(STransformVecInfo& info)
 }
 
 // ------------------------------------------------------------------------------------------------
-void UpdateUVIndex(const std::list<TTUpdateInfo>& l, unsigned int n)
+void UpdateUVIndex(const std::vector<TTUpdateInfo>& l, unsigned int n)
 {
     // Don't set if == 0 && wasn't set before
-    for (std::list<TTUpdateInfo>::const_iterator it = l.begin();it != l.end(); ++it) {
+    for (std::vector<TTUpdateInfo>::const_iterator it = l.begin();it != l.end(); ++it) {
         const TTUpdateInfo& info = *it;
 
         if (info.directShortcut)

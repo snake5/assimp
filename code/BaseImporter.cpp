@@ -51,7 +51,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/assimp/Importer.hpp"
 #include "../include/assimp/postprocess.h"
 #include <boost/scoped_ptr.hpp>
-#include <boost/scoped_array.hpp>
 #include <cctype>
 #include <list>
 
@@ -143,18 +142,14 @@ void BaseImporter::GetExtensionList(std::set<std::string>& extensions)
     unsigned int        searchBytes /* = 200 */,
     bool                tokensSol /* false */)
 {
-    ai_assert(NULL != tokens && 0 != numTokens && 0 != searchBytes);
+    ai_assert(NULL != tokens && 0 != numTokens && 0 != searchBytes && searchBytes <= 200);
     if (!pIOHandler)
         return false;
 
     boost::scoped_ptr<IOStream> pStream (pIOHandler->Open(pFile));
     if (pStream.get() ) {
         // read 200 characters from the file
-        boost::scoped_array<char> _buffer (new char[searchBytes+1 /* for the '\0' */]);
-        char* buffer = _buffer.get();
-        if( NULL == buffer ) {
-            return false;
-        }
+        char buffer[201];
 
         const size_t read = pStream->Read(buffer,1,searchBytes);
         if( !read ) {
@@ -178,7 +173,6 @@ void BaseImporter::GetExtensionList(std::set<std::string>& extensions)
 
         for (unsigned int i = 0; i < numTokens;++i) {
             ai_assert(NULL != tokens[i]);
-
 
             const char* r = strstr(buffer,tokens[i]);
             if( !r ) {

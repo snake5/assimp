@@ -307,7 +307,11 @@ unsigned int GetMeshVFormatUnique(const aiMesh* pcMesh);
 
 
 // defs for ComputeVertexBoneWeightTable()
-typedef std::pair <unsigned int,float> PerVertexWeight;
+struct PerVertexWeight
+{
+	unsigned bone_id;
+	float weight;
+};
 typedef std::vector <PerVertexWeight> VertexWeightTable;
 
 // -------------------------------------------------------------------------------

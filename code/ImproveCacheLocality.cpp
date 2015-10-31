@@ -55,7 +55,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/assimp/scene.h"
 #include "../include/assimp/DefaultLogger.hpp"
 #include <stdio.h>
-#include <stack>
 
 using namespace Assimp;
 
@@ -207,7 +206,7 @@ float ImproveCacheLocalityProcess::ProcessMesh( aiMesh* pMesh, unsigned int mesh
     std::vector<bool> abEmitted(pMesh->mNumFaces,false);
 
     // dead-end vertex index stack
-    std::stack<unsigned int, std::vector<unsigned int> > sDeadEndVStack;
+    std::vector<unsigned int> sDeadEndVStack;
 
     // create a copy of the piNumTriPtr buffer
     unsigned int* const piNumTriPtr = adj.mLiveTriangles;
@@ -278,7 +277,7 @@ float ImproveCacheLocalityProcess::ProcessMesh( aiMesh* pMesh, unsigned int mesh
                     // the current vertex won't have any free triangles after this step
                     if (ivdx != (int)dp) {
                         // append the vertex to the dead-end stack
-                        sDeadEndVStack.push(dp);
+                        sDeadEndVStack.push_back(dp);
 
                         // register as candidate for the next step
                         *piCurCandidate++ = dp;
@@ -332,8 +331,8 @@ float ImproveCacheLocalityProcess::ProcessMesh( aiMesh* pMesh, unsigned int mesh
             // need to get a non-local vertex for which we have a good chance that it is still
             // in the cache ...
             while (!sDeadEndVStack.empty()) {
-                unsigned int iCachedIdx = sDeadEndVStack.top();
-                sDeadEndVStack.pop();
+                unsigned int iCachedIdx = sDeadEndVStack.back();
+                sDeadEndVStack.pop_back();
                 if (piNumTriPtr[ iCachedIdx ] > 0)  {
                     ivdx = iCachedIdx;
                     break;

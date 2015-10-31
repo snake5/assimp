@@ -262,8 +262,8 @@ bool Q3Shader::LoadSkin(SkinData& fill, const std::string& pFile,IOSystem* io)
         fill.textures.push_back(SkinData::TextureEntry());
         SkinData::TextureEntry& s = fill.textures.back();
 
-        s.first  = ss;
-        s.second = GetNextToken(buff);
+        s.skin  = ss;
+        s.surf = GetNextToken(buff);
     }
     return true;
 }
@@ -880,8 +880,8 @@ void MD3Importer::InternReadFile( const std::string& pFile,
             skins.textures.begin(), skins.textures.end(), pcSurfaces->NAME );
 
         if (it != skins.textures.end()) {
-            texture_name = &*( _texture_name = (*it).second).begin();
-            DefaultLogger::get()->debug("MD3: Assigning skin texture " + (*it).second + " to surface " + pcSurfaces->NAME);
+            texture_name = &*( _texture_name = (*it).surf).begin();
+            DefaultLogger::get()->debug("MD3: Assigning skin texture " + (*it).surf + " to surface " + pcSurfaces->NAME);
             (*it).resolved = true; // mark entry as resolved
         }
 
@@ -1027,7 +1027,7 @@ void MD3Importer::InternReadFile( const std::string& pFile,
     if (!DefaultLogger::isNullLogger()) {
         for (std::list< Q3Shader::SkinData::TextureEntry>::const_iterator it = skins.textures.begin();it != skins.textures.end(); ++it) {
             if (!(*it).resolved) {
-                DefaultLogger::get()->error("MD3: Failed to match skin " + (*it).first + " to surface " + (*it).second);
+                DefaultLogger::get()->error("MD3: Failed to match skin " + (*it).skin + " to surface " + (*it).surf);
             }
         }
     }
