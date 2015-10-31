@@ -110,7 +110,11 @@ public:
 
         unsigned int mat,flags;
 
-        typedef std::pair<unsigned int, aiVector2D > SurfaceEntry;
+		struct SurfaceEntry
+		{
+			unsigned vtx_id;
+			aiVector2D uv;
+		};
         std::vector< SurfaceEntry > entries;
     };
 

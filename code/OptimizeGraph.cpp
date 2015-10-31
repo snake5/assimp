@@ -100,12 +100,12 @@ void OptimizeGraphProcess::SetupProperties(const Importer* pImp)
 
 // ------------------------------------------------------------------------------------------------
 // Collect new children
-void OptimizeGraphProcess::CollectNewChildren(aiNode* nd, std::list<aiNode*>& nodes)
+void OptimizeGraphProcess::CollectNewChildren(aiNode* nd, std::vector<aiNode*>& nodes)
 {
     nodes_in += nd->mNumChildren;
 
     // Process children
-    std::list<aiNode*> child_nodes;
+    std::vector<aiNode*> child_nodes;
     for (unsigned int i = 0; i < nd->mNumChildren; ++i) {
 
         CollectNewChildren(nd->mChildren[i],child_nodes);
@@ -114,7 +114,7 @@ void OptimizeGraphProcess::CollectNewChildren(aiNode* nd, std::list<aiNode*>& no
 
     // Check whether we need this node; if not we can replace it by our own children (warn, danger of incest).
     if (locked.find(AI_OG_GETKEY(nd->mName)) == locked.end() ) {
-        for (std::list<aiNode*>::iterator it = child_nodes.begin(); it != child_nodes.end();) {
+        for (std::vector<aiNode*>::iterator it = child_nodes.begin(); it != child_nodes.end();) {
 
             if (locked.find(AI_OG_GETKEY((*it)->mName)) == locked.end()) {
                 (*it)->mTransformation = nd->mTransformation * (*it)->mTransformation;
@@ -145,8 +145,8 @@ void OptimizeGraphProcess::CollectNewChildren(aiNode* nd, std::list<aiNode*>& no
 
         const LockedSetType::const_iterator end = locked.end();
 
-        std::list<aiNode*> join;
-        for (std::list<aiNode*>::iterator it = child_nodes.begin(); it != child_nodes.end();)   {
+        std::vector<aiNode*> join;
+        for (std::vector<aiNode*>::iterator it = child_nodes.begin(); it != child_nodes.end();)   {
             aiNode* child = *it;
             if (child->mNumChildren == 0 && locked.find(AI_OG_GETKEY(child->mName)) == end) {
 
@@ -180,7 +180,7 @@ void OptimizeGraphProcess::CollectNewChildren(aiNode* nd, std::list<aiNode*>& no
             join_master->mName.length = sprintf(join_master->mName.data,"$MergedNode_%i",count_merged++);
 
             unsigned int out_meshes = 0;
-            for (std::list<aiNode*>::iterator it = join.begin(); it != join.end(); ++it) {
+            for (std::vector<aiNode*>::iterator it = join.begin(); it != join.end(); ++it) {
                 out_meshes += (*it)->mNumMeshes;
             }
 
@@ -191,7 +191,7 @@ void OptimizeGraphProcess::CollectNewChildren(aiNode* nd, std::list<aiNode*>& no
                     *tmp++ = join_master->mMeshes[n];
                 }
 
-                for (std::list<aiNode*>::iterator it = join.begin(); it != join.end(); ++it) {
+                for (std::vector<aiNode*>::iterator it = join.begin(); it != join.end(); ++it) {
                     for (unsigned int n = 0; n < (*it)->mNumMeshes; ++n) {
 
                         *tmp = (*it)->mMeshes[n];
@@ -233,7 +233,7 @@ void OptimizeGraphProcess::CollectNewChildren(aiNode* nd, std::list<aiNode*>& no
     nd->mNumChildren = child_nodes.size();
 
     aiNode** tmp = nd->mChildren;
-    for (std::list<aiNode*>::iterator it = child_nodes.begin(); it != child_nodes.end(); ++it) {
+    for (std::vector<aiNode*>::iterator it = child_nodes.begin(); it != child_nodes.end(); ++it) {
         aiNode* node = *tmp++ = *it;
         node->mParent = nd;
     }
@@ -305,7 +305,7 @@ void OptimizeGraphProcess::Execute( aiScene* pScene)
     // Do our recursive processing of scenegraph nodes. For each node collect
     // a fully new list of children and allow their children to place themselves
     // on the same hierarchy layer as their parents.
-    std::list<aiNode*> nodes;
+    std::vector<aiNode*> nodes;
     CollectNewChildren (dummy_root,nodes);
 
     ai_assert(nodes.size() == 1);

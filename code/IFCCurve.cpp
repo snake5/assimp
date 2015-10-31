@@ -96,7 +96,8 @@ public:
 
     // --------------------------------------------------
     ParamRange GetParametricRange() const {
-        return std::make_pair(static_cast<IfcFloat>( 0. ), static_cast<IfcFloat>( AI_MATH_TWO_PI / conv.angle_scale ));
+		ParamRange out = {static_cast<IfcFloat>( 0. ), static_cast<IfcFloat>( AI_MATH_TWO_PI / conv.angle_scale )};
+		return out;
     }
 
 protected:
@@ -215,8 +216,8 @@ public:
     // --------------------------------------------------
     ParamRange GetParametricRange() const {
         const IfcFloat inf = std::numeric_limits<IfcFloat>::infinity();
-
-        return std::make_pair(-inf,+inf);
+		ParamRange out = {-inf, +inf};
+		return out;
     }
 
 private:
@@ -273,15 +274,15 @@ public:
         IfcFloat acc = 0;
         BOOST_FOREACH(const CurveEntry& entry, curves) {
             const ParamRange& range = entry.first->GetParametricRange();
-            const IfcFloat delta = std::abs(range.second-range.first);
+            const IfcFloat delta = std::abs(range.pmax-range.pmin);
             if (u < acc+delta) {
-                return entry.first->Eval( entry.second ? (u-acc) + range.first : range.second-(u-acc));
+                return entry.first->Eval( entry.second ? (u-acc) + range.pmin : range.pmax-(u-acc));
             }
 
             acc += delta;
         }
         // clamp to end
-        return curves.back().first->Eval(curves.back().first->GetParametricRange().second);
+        return curves.back().first->Eval(curves.back().first->GetParametricRange().pmax);
     }
 
     // --------------------------------------------------
@@ -292,10 +293,10 @@ public:
         IfcFloat acc = 0;
         BOOST_FOREACH(const CurveEntry& entry, curves) {
             const ParamRange& range = entry.first->GetParametricRange();
-            const IfcFloat delta = std::abs(range.second-range.first);
+            const IfcFloat delta = std::abs(range.pmax-range.pmin);
             if (a <= acc+delta && b >= acc) {
                 const IfcFloat at =  std::max(static_cast<IfcFloat>( 0. ),a-acc), bt = std::min(delta,b-acc);
-                cnt += entry.first->EstimateSampleCount( entry.second ? at + range.first : range.second - bt, entry.second ? bt + range.first : range.second - at );
+                cnt += entry.first->EstimateSampleCount( entry.second ? at + range.pmin : range.pmax - bt, entry.second ? bt + range.pmin : range.pmax - at );
             }
 
             acc += delta;
@@ -324,7 +325,8 @@ public:
 
     // --------------------------------------------------
     ParamRange GetParametricRange() const {
-        return std::make_pair(static_cast<IfcFloat>( 0. ),total);
+		ParamRange out = {static_cast<IfcFloat>( 0. ),total};
+		return out;
     }
 
 private:
@@ -359,7 +361,7 @@ public:
         IfcVector3 point;
         BOOST_FOREACH(const Entry sel,entity.Trim1) {
             if (const EXPRESS::REAL* const r = sel->ToPtr<EXPRESS::REAL>()) {
-                range.first = *r;
+                range.pmin = *r;
                 have_param = true;
                 break;
             }
@@ -369,14 +371,14 @@ public:
             }
         }
         if (!have_param) {
-            if (!have_point || !base->ReverseEval(point,range.first)) {
+            if (!have_point || !base->ReverseEval(point,range.pmin)) {
                 throw CurveError("IfcTrimmedCurve: failed to read first trim parameter, ignoring curve");
             }
         }
         have_param = false, have_point = false;
         BOOST_FOREACH(const Entry sel,entity.Trim2) {
             if (const EXPRESS::REAL* const r = sel->ToPtr<EXPRESS::REAL>()) {
-                range.second = *r;
+                range.pmax = *r;
                 have_param = true;
                 break;
             }
@@ -386,25 +388,25 @@ public:
             }
         }
         if (!have_param) {
-            if (!have_point || !base->ReverseEval(point,range.second)) {
+            if (!have_point || !base->ReverseEval(point,range.pmax)) {
                 throw CurveError("IfcTrimmedCurve: failed to read second trim parameter, ignoring curve");
             }
         }
 
         agree_sense = IsTrue(entity.SenseAgreement);
         if( !agree_sense ) {
-            std::swap(range.first,range.second);
+            std::swap(range.pmin,range.pmax);
         }
 
         // "NOTE In case of a closed curve, it may be necessary to increment t1 or t2
         // by the parametric length for consistency with the sense flag."
         if (base->IsClosed()) {
-            if( range.first > range.second ) {
-                range.second += base->GetParametricRangeDelta();
+            if( range.pmin > range.pmax ) {
+                range.pmax += base->GetParametricRangeDelta();
             }
         }
 
-        maxval = range.second-range.first;
+        maxval = range.pmax-range.pmin;
         ai_assert(maxval >= 0);
     }
 
@@ -430,14 +432,15 @@ public:
 
     // --------------------------------------------------
     ParamRange GetParametricRange() const {
-        return std::make_pair(static_cast<IfcFloat>( 0. ),maxval);
+		ParamRange out = {static_cast<IfcFloat>( 0. ),maxval};
+		return out;
     }
 
 private:
 
     // --------------------------------------------------
     IfcFloat TrimParam(IfcFloat f) const {
-        return agree_sense ? f + range.first :  range.second - f;
+        return agree_sense ? f + range.pmin :  range.pmax - f;
     }
 
 
@@ -494,7 +497,8 @@ public:
 
     // --------------------------------------------------
     ParamRange GetParametricRange() const {
-        return std::make_pair(static_cast<IfcFloat>( 0. ),static_cast<IfcFloat>(points.size()-1));
+		ParamRange out = {static_cast<IfcFloat>( 0. ),static_cast<IfcFloat>(points.size()-1)};
+		return out;
     }
 
 private:
@@ -551,7 +555,7 @@ bool Curve :: InRange(IfcFloat u) const
         //u = range.first + std::fmod(u-range.first,range.second-range.first);
     }
     const IfcFloat epsilon = 1e-5;
-    return u - range.first > -epsilon && range.second - u > -epsilon;
+    return u - range.pmin > -epsilon && range.pmax - u > -epsilon;
 }
 #endif
 
@@ -559,7 +563,7 @@ bool Curve :: InRange(IfcFloat u) const
 IfcFloat Curve :: GetParametricRangeDelta() const
 {
     const ParamRange& range = GetParametricRange();
-    return std::abs(range.second - range.first);
+    return std::abs(range.pmax - range.pmin);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -603,11 +607,11 @@ IfcFloat RecursiveSearch(const Curve* cv, const IfcVector3& val, IfcFloat a, Ifc
     // fix for closed curves to take their wrap-over into account
     if (cv->IsClosed() && std::fabs(min_point[0]-min_point[1]) > cv->GetParametricRangeDelta()*0.5  ) {
         const Curve::ParamRange& range = cv->GetParametricRange();
-        const IfcFloat wrapdiff = (cv->Eval(range.first)-val).SquareLength();
+        const IfcFloat wrapdiff = (cv->Eval(range.pmin)-val).SquareLength();
 
         if (wrapdiff < min_diff[0]) {
             const IfcFloat t = min_point[0];
-            min_point[0] = min_point[1] > min_point[0] ? range.first : range.second;
+            min_point[0] = min_point[1] > min_point[0] ? range.pmin : range.pmax;
              min_point[1] = t;
         }
     }
@@ -627,7 +631,7 @@ bool Curve :: ReverseEval(const IfcVector3& val, IfcFloat& paramOut) const
     const unsigned int samples = 16;
 
     const ParamRange& range = GetParametricRange();
-    paramOut = RecursiveSearch(this,val,range.first,range.second,samples,threshold);
+    paramOut = RecursiveSearch(this,val,range.pmin,range.pmax,samples,threshold);
 
     return true;
 }
@@ -658,7 +662,7 @@ void BoundedCurve :: SampleDiscrete(TempMesh& out) const
     const ParamRange& range = GetParametricRange();
     ai_assert(range.first != std::numeric_limits<IfcFloat>::infinity() && range.second != std::numeric_limits<IfcFloat>::infinity());
 
-    return SampleDiscrete(out,range.first,range.second);
+    return SampleDiscrete(out,range.pmin,range.pmax);
 }
 
 } // IFC

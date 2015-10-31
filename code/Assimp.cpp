@@ -55,7 +55,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Exceptional.h"
 #include "ScenePrivate.h"
 #include "BaseImporter.h"
-#include <list>
 
 // ------------------------------------------------------------------------------------------------
 #ifndef ASSIMP_BUILD_SINGLETHREADED
@@ -79,7 +78,7 @@ namespace Assimp
     typedef std::map<aiLogStream, Assimp::LogStream*, mpred> LogStreamMap;
 
     /** Stores the LogStream objects allocated by #aiGetPredefinedLogStream */
-    typedef std::list<Assimp::LogStream*> PredefLogStreamMap;
+    typedef std::vector<Assimp::LogStream*> PredefLogStreamMap;
 
     /** Local storage of all active log streams */
     static LogStreamMap gActiveLogStreams;

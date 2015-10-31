@@ -387,9 +387,9 @@ void AC3DImporter::LoadObjectSection(std::vector<Object>& objects)
                             surf.entries.push_back(Surface::SurfaceEntry());
                             Surface::SurfaceEntry& entry = surf.entries.back();
 
-                            entry.first = strtoul10(buffer,&buffer);
+                            entry.vtx_id = strtoul10(buffer,&buffer);
                             SkipSpaces(&buffer);
-                            AI_AC_CHECKED_LOAD_FLOAT_ARRAY("",0,2,&entry.second);
+                            AI_AC_CHECKED_LOAD_FLOAT_ARRAY("",0,2,&entry.uv);
                         }
                     }
                     else
@@ -504,9 +504,14 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
         {
             // need to generate one or more meshes for this object.
             // find out how many different materials we have
-            typedef std::pair< unsigned int, unsigned int > IntPair;
-            typedef std::vector< IntPair > MatTable;
-            MatTable needMat(materials.size(),IntPair(0,0));
+			struct MtlCount
+			{
+				unsigned numfaces;
+				unsigned numverts;
+			};
+            typedef std::vector< MtlCount > MatTable;
+			MtlCount zeroMC = {0, 0};
+            MatTable needMat(materials.size(),zeroMC);
 
             std::vector<Surface>::iterator it,end = object.surfaces.end();
             std::vector<Surface::SurfaceEntry>::iterator it2,end2;
@@ -528,29 +533,29 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
                 for (it2  = (*it).entries.begin(),
                      end2 = (*it).entries.end(); it2 != end2; ++it2)
                 {
-                    if ((*it2).first >= object.vertices.size())
+                    if ((*it2).vtx_id >= object.vertices.size())
                     {
                         DefaultLogger::get()->warn("AC3D: Invalid vertex reference");
-                        (*it2).first = 0;
+                        (*it2).vtx_id = 0;
                     }
                 }
 
-                if (!needMat[idx].first)++node->mNumMeshes;
+                if (!needMat[idx].numfaces)++node->mNumMeshes;
 
                 switch ((*it).flags & 0xf)
                 {
                     // closed line
                 case 0x1:
 
-                    needMat[idx].first  += (unsigned int)(*it).entries.size();
-                    needMat[idx].second += (unsigned int)(*it).entries.size()<<1u;
+                    needMat[idx].numfaces  += (unsigned int)(*it).entries.size();
+                    needMat[idx].numverts += (unsigned int)(*it).entries.size()<<1u;
                     break;
 
                     // unclosed line
                 case 0x2:
 
-                    needMat[idx].first  += (unsigned int)(*it).entries.size()-1;
-                    needMat[idx].second += ((unsigned int)(*it).entries.size()-1)<<1u;
+                    needMat[idx].numfaces  += (unsigned int)(*it).entries.size()-1;
+                    needMat[idx].numverts += ((unsigned int)(*it).entries.size()-1)<<1u;
                     break;
 
                     // 0 == polygon, else unknown
@@ -564,8 +569,8 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
 
                     // the number of faces increments by one, the number
                     // of vertices by surface.numref.
-                    needMat[idx].first++;
-                    needMat[idx].second += (unsigned int)(*it).entries.size();
+                    needMat[idx].numfaces++;
+                    needMat[idx].numverts += (unsigned int)(*it).entries.size();
                 };
             }
             unsigned int* pip = node->mMeshes = new unsigned int[node->mNumMeshes];
@@ -574,7 +579,7 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
             for (MatTable::const_iterator cit = needMat.begin(), cend = needMat.end();
                 cit != cend; ++cit, ++mat)
             {
-                if (!(*cit).first)continue;
+                if (!(*cit).numfaces)continue;
 
                 // allocate a new aiMesh object
                 *pip++ = (unsigned int)meshes.size();
@@ -586,7 +591,7 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
                 ConvertMaterial(object, materials[mat], *outMaterials.back());
 
                 // allocate storage for vertices and normals
-                mesh->mNumFaces = (*cit).first;
+                mesh->mNumFaces = (*cit).numfaces;
                 if (mesh->mNumFaces == 0) {
                     throw DeadlyImportError("AC3D: No faces");
                 } else if (mesh->mNumFaces > AI_MAX_ALLOC(aiFace)) {
@@ -594,7 +599,7 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
                 }
                 aiFace* faces = mesh->mFaces = new aiFace[mesh->mNumFaces];
 
-                mesh->mNumVertices = (*cit).second;
+                mesh->mNumVertices = (*cit).numverts;
                 if (mesh->mNumVertices == 0) {
                     throw DeadlyImportError("AC3D: No vertices");
                 } else if (mesh->mNumVertices > AI_MAX_ALLOC(aiVector3D)) {
@@ -635,14 +640,14 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
                                     if (static_cast<unsigned>(vertices - mesh->mVertices) >= mesh->mNumVertices) {
                                         throw DeadlyImportError("AC3D: Invalid number of vertices");
                                     }
-                                    *vertices = object.vertices[entry.first] + object.translation;
+                                    *vertices = object.vertices[entry.vtx_id] + object.translation;
 
 
                                     // copy texture coordinates
                                     if (uv)
                                     {
-                                        uv->x =  entry.second.x;
-                                        uv->y =  entry.second.y;
+                                        uv->x =  entry.uv.x;
+                                        uv->y =  entry.uv.y;
                                         ++uv;
                                     }
                                 }
@@ -669,14 +674,14 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
                                 if (it2 == (*it).entries.end() ) {
                                     throw DeadlyImportError("AC3D: Bad line");
                                 }
-                                ai_assert((*it2).first < object.vertices.size());
-                                *vertices++ = object.vertices[(*it2).first];
+                                ai_assert((*it2).vtx_id < object.vertices.size());
+                                *vertices++ = object.vertices[(*it2).vtx_id];
 
                                 // copy texture coordinates
                                 if (uv)
                                 {
-                                    uv->x =  (*it2).second.x;
-                                    uv->y =  (*it2).second.y;
+                                    uv->x =  (*it2).uv.x;
+                                    uv->y =  (*it2).uv.y;
                                     ++uv;
                                 }
 
@@ -689,12 +694,12 @@ aiNode* AC3DImporter::ConvertObjectSection(Object& object,
                                 else ++it2;
 
                                 // second point
-                                *vertices++ = object.vertices[(*it2).first];
+                                *vertices++ = object.vertices[(*it2).vtx_id];
 
                                 if (uv)
                                 {
-                                    uv->x =  (*it2).second.x;
-                                    uv->y =  (*it2).second.y;
+                                    uv->x =  (*it2).uv.x;
+                                    uv->y =  (*it2).uv.y;
                                     ++uv;
                                 }
                             }

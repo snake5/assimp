@@ -50,12 +50,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/assimp/scene.h"
 #include "../include/assimp/Importer.hpp"
 #include "../include/assimp/postprocess.h"
-#include <ios>
-#include <list>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
-#include <sstream>
 #include <cctype>
+#include <list>
 
 
 using namespace Assimp;
@@ -412,11 +410,9 @@ void BaseImporter::ConvertUTF8toISO8859_1(std::string& data)
             } else if((unsigned char) data[i] == 0xC3) {
                 data[j] = ((unsigned char) data[++i] + 0x40);
             } else {
-                std::stringstream stream;
-
-                stream << "UTF8 code " << std::hex << data[i] << data[i + 1] << " can not be converted into ISA-8859-1.";
-
-                DefaultLogger::get()->error(stream.str());
+				char bfr[64];
+				sprintf(bfr, "UTF8 code %02x%02x can not be converted into ISA-8859-1.", data[i], data[i + 1]);
+                DefaultLogger::get()->error(bfr);
 
                 data[j++] = data[i++];
                 data[j] = data[i];

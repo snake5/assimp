@@ -294,7 +294,7 @@ void PretransformVertices::CollectData( aiScene* pcScene, aiNode* pcNode, unsign
 // Get a list of all vertex formats that occur for a given material index
 // The output list contains duplicate elements
 void PretransformVertices::GetVFormatList( aiScene* pcScene, unsigned int iMat,
-    std::list<unsigned int>& aiOut)
+    std::vector<unsigned int>& aiOut)
 {
     for (unsigned int i = 0; i < pcScene->mNumMeshes;++i)
     {
@@ -499,7 +499,7 @@ void PretransformVertices::Execute( aiScene* pScene)
     else {
 
         apcOutMeshes.reserve(pScene->mNumMaterials<<1u);
-        std::list<unsigned int> aiVFormats;
+        std::vector<unsigned int> aiVFormats;
 
         std::vector<unsigned int> s(pScene->mNumMeshes,0);
         BuildMeshRefCountArray(pScene->mRootNode,&s[0]);
@@ -508,9 +508,9 @@ void PretransformVertices::Execute( aiScene* pScene)
             // get the list of all vertex formats for this material
             aiVFormats.clear();
             GetVFormatList(pScene,i,aiVFormats);
-            aiVFormats.sort();
-            aiVFormats.unique();
-            for (std::list<unsigned int>::const_iterator j =  aiVFormats.begin();j != aiVFormats.end();++j) {
+			std::sort(aiVFormats.begin(),aiVFormats.end());
+			std::unique(aiVFormats.begin(),aiVFormats.end());
+            for (std::vector<unsigned int>::const_iterator j =  aiVFormats.begin();j != aiVFormats.end();++j) {
                 unsigned int iVertices = 0;
                 unsigned int iFaces = 0;
                 CountVerticesAndFaces(pScene,pScene->mRootNode,i,*j,&iFaces,&iVertices);

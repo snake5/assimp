@@ -46,7 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // STL/CRT headers
 #include <string>
 #include <vector>
-#include <list>
 
 // public ASSIMP headers
 #include "../include/assimp/types.h"

@@ -679,7 +679,8 @@ void SceneCombiner::BuildUniqueBoneList(std::list<BoneWithHash>& asBones,
 
             for (;it2 != end2;++it2)    {
                 if ((*it2).first == itml)   {
-                    (*it2).pSrcBones.push_back(BoneSrcIndex(p,iOffset));
+					BoneSrcIndex bsi = {p, iOffset};
+                    (*it2).pSrcBones.push_back(bsi);
                     break;
                 }
             }
@@ -691,7 +692,8 @@ void SceneCombiner::BuildUniqueBoneList(std::list<BoneWithHash>& asBones,
                 // setup members
                 btz.first = itml;
                 btz.second = &p->mName;
-                btz.pSrcBones.push_back(BoneSrcIndex(p,iOffset));
+				BoneSrcIndex bsi = {p, iOffset};
+                btz.pSrcBones.push_back(bsi);
             }
         }
         iOffset += (*it)->mNumVertices;
@@ -724,15 +726,15 @@ void SceneCombiner::MergeBones(aiMesh* out,std::vector<aiMesh*>::const_iterator 
 
         // Loop through all bones to be joined for this bone
         for (std::vector< BoneSrcIndex >::const_iterator wmit = (*it).pSrcBones.begin(); wmit != wend; ++wmit)  {
-            pc->mNumWeights += (*wmit).first->mNumWeights;
+            pc->mNumWeights += (*wmit).bone->mNumWeights;
 
             // NOTE: different offset matrices for bones with equal names
             // are - at the moment - not handled correctly.
-            if (wmit != (*it).pSrcBones.begin() && pc->mOffsetMatrix != (*wmit).first->mOffsetMatrix)   {
+            if (wmit != (*it).pSrcBones.begin() && pc->mOffsetMatrix != (*wmit).bone->mOffsetMatrix)   {
                 DefaultLogger::get()->warn("Bones with equal names but different offset matrices can't be joined at the moment");
                 continue;
             }
-            pc->mOffsetMatrix = (*wmit).first->mOffsetMatrix;
+            pc->mOffsetMatrix = (*wmit).bone->mOffsetMatrix;
         }
 
         // Allocate the vertex weight array
@@ -741,11 +743,11 @@ void SceneCombiner::MergeBones(aiMesh* out,std::vector<aiMesh*>::const_iterator 
         // And copy the final weights - adjust the vertex IDs by the
         // face index offset of the coresponding mesh.
         for (std::vector< BoneSrcIndex >::const_iterator wmit = (*it).pSrcBones.begin(); wmit != wend; ++wmit)  {
-            aiBone* pip = (*wmit).first;
+            aiBone* pip = (*wmit).bone;
             for (unsigned int mp = 0; mp < pip->mNumWeights;++mp,++avw) {
                 const aiVertexWeight& vfi = pip->mWeights[mp];
                 avw->mWeight = vfi.mWeight;
-                avw->mVertexId = vfi.mVertexId + (*wmit).second;
+                avw->mVertexId = vfi.mVertexId + (*wmit).index;
             }
         }
     }

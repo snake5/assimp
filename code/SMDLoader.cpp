@@ -301,8 +301,7 @@ void SMDImporter::CreateOutputMeshes()
         pcMesh->mMaterialIndex = i;
 
         // storage for bones
-        typedef std::pair<unsigned int,float> TempWeightListEntry;
-        typedef std::vector< TempWeightListEntry > TempBoneWeightList;
+        typedef std::vector< SMD::Vertex::BoneWeight > TempBoneWeightList;
 
         TempBoneWeightList* aaiBones = new TempBoneWeightList[asBones.size()]();
 
@@ -356,20 +355,21 @@ void SMDImporter::CreateOutputMeshes()
                 float fSum = 0.0f;
                 for (unsigned int iBone = 0;iBone < face.avVertices[iVert].aiBoneLinks.size();++iBone)
                 {
-                    TempWeightListEntry& pairval = face.avVertices[iVert].aiBoneLinks[iBone];
+                    SMD::Vertex::BoneWeight& bw = face.avVertices[iVert].aiBoneLinks[iBone];
 
                     // FIX: The second check is here just to make sure we won't
                     // assign more than one weight to a single vertex index
-                    if (pairval.first >= asBones.size() ||
-                        pairval.first == face.avVertices[iVert].iParentNode)
+                    if (bw.idx >= asBones.size() ||
+                        bw.idx == face.avVertices[iVert].iParentNode)
                     {
                         DefaultLogger::get()->error("[SMD/VTA] Bone index overflow. "
                             "The bone index will be ignored, the weight will be assigned "
                             "to the vertex' parent node");
                         continue;
                     }
-                    aaiBones[pairval.first].push_back(TempWeightListEntry(iNum,pairval.second));
-                    fSum += pairval.second;
+					SMD::Vertex::BoneWeight nbw = {iNum,bw.weight};
+                    aaiBones[bw.idx].push_back(nbw);
+                    fSum += bw.weight;
                 }
                 // ******************************************************************
                 // If the sum of all vertex weights is not 1.0 we must assign
@@ -393,16 +393,16 @@ void SMDImporter::CreateOutputMeshes()
                             fSum = 1 / fSum;
                             for (unsigned int iBone = 0;iBone < face.avVertices[iVert].aiBoneLinks.size();++iBone)
                             {
-                                TempWeightListEntry& pairval = face.avVertices[iVert].aiBoneLinks[iBone];
-                                if (pairval.first >= asBones.size())continue;
-                                aaiBones[pairval.first].back().second *= fSum;
+                                SMD::Vertex::BoneWeight& bw = face.avVertices[iVert].aiBoneLinks[iBone];
+                                if (bw.idx >= asBones.size())continue;
+                                aaiBones[bw.idx].back().weight *= fSum;
                             }
                         }
                     }
                     else
                     {
-                        aaiBones[face.avVertices[iVert].iParentNode].push_back(
-                            TempWeightListEntry(iNum,1.0f-fSum));
+						SMD::Vertex::BoneWeight nbw = {iNum,1.0f-fSum};
+                        aaiBones[face.avVertices[iVert].iParentNode].push_back(nbw);
                     }
                 }
                 pcMesh->mFaces[iFace].mIndices[iVert] = iNum++;
@@ -433,8 +433,8 @@ void SMDImporter::CreateOutputMeshes()
 
                 for (unsigned int iWeight = 0; iWeight < bone->mNumWeights;++iWeight)
                 {
-                    bone->mWeights[iWeight].mVertexId = aaiBones[iBone][iWeight].first;
-                    bone->mWeights[iWeight].mWeight = aaiBones[iBone][iWeight].second;
+                    bone->mWeights[iWeight].mVertexId = aaiBones[iBone][iWeight].idx;
+                    bone->mWeights[iWeight].mWeight = aaiBones[iBone][iWeight].weight;
                 }
                 ++iNum;
             }
@@ -1136,15 +1136,16 @@ void SMDImporter::ParseVertex(const char* szCurrent,
     // all elements from now are fully optional, we don't need them
     unsigned int iSize = 0;
     if(!ParseUnsignedInt(szCurrent,&szCurrent,iSize))SMDI_PARSE_RETURN;
-    vertex.aiBoneLinks.resize(iSize,std::pair<unsigned int, float>(0,0.0f));
+	SMD::Vertex::BoneWeight bw = {0, 0.0f};
+    vertex.aiBoneLinks.resize(iSize,bw);
 
-    for (std::vector<std::pair<unsigned int, float> >::iterator
+    for (SMD::Vertex::BoneWeightVector::iterator
         i =  vertex.aiBoneLinks.begin();
         i != vertex.aiBoneLinks.end();++i)
     {
-        if(!ParseUnsignedInt(szCurrent,&szCurrent,(*i).first))
+        if(!ParseUnsignedInt(szCurrent,&szCurrent,(*i).idx))
             SMDI_PARSE_RETURN;
-        if(!ParseFloat(szCurrent,&szCurrent,(*i).second))
+        if(!ParseFloat(szCurrent,&szCurrent,(*i).weight))
             SMDI_PARSE_RETURN;
     }
 

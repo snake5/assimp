@@ -144,7 +144,11 @@ struct NodeAttachmentInfo
 #define AI_INT_MERGE_SCENE_GEN_UNIQUE_NAMES_IF_NECESSARY 0x10
 
 
-typedef std::pair<aiBone*,unsigned int> BoneSrcIndex;
+struct BoneSrcIndex
+{
+	aiBone* bone;
+	unsigned index;
+};
 
 // ---------------------------------------------------------------------------
 /** @brief Helper data structure for SceneCombiner::MergeBones.

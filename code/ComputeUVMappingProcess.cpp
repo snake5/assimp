@@ -394,7 +394,7 @@ void ComputeUVMappingProcess::Execute( aiScene* pScene)
     if (pScene->mFlags & AI_SCENE_FLAGS_NON_VERBOSE_FORMAT)
         throw DeadlyImportError("Post-processing order mismatch: expecting pseudo-indexed (\"verbose\") vertices here");
 
-    std::list<MappingInfo> mappingStack;
+    std::vector<MappingInfo> mappingStack;
 
     /*  Iterate through all materials and search for non-UV mapped textures
      */
@@ -440,7 +440,7 @@ void ComputeUVMappingProcess::Execute( aiScene* pScene)
                     unsigned int idx;
 
                     // Check whether we have this mapping mode already
-                    std::list<MappingInfo>::iterator it = std::find (mappingStack.begin(),mappingStack.end(), info);
+                    std::vector<MappingInfo>::iterator it = std::find (mappingStack.begin(),mappingStack.end(), info);
                     if (mappingStack.end() != it)
                     {
                         idx = (*it).uv;

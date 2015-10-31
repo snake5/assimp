@@ -82,7 +82,13 @@ struct Vertex
     //! pair.second is the vertex weight.
     //! WARN: The remaining weight (to reach 1.0f) is assigned
     //! to the parent node/bone
-    std::vector<std::pair<unsigned int, float> > aiBoneLinks;
+	struct BoneWeight
+	{
+		unsigned idx;
+		float weight;
+	};
+	typedef std::vector<BoneWeight> BoneWeightVector;
+    BoneWeightVector aiBoneLinks;
 };
 
 // ---------------------------------------------------------------------------

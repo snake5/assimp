@@ -47,7 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseProcess.h"
 #include "../include/assimp/mesh.h"
-#include <list>
 #include <vector>
 
 struct aiNode;
@@ -129,7 +128,7 @@ private:
     // Get a list of all vertex formats that occur for a given material
     // The output list contains duplicate elements
     void GetVFormatList( aiScene* pcScene, unsigned int iMat,
-        std::list<unsigned int>& aiOut);
+        std::vector<unsigned int>& aiOut);
 
     // -------------------------------------------------------------------
     // Compute the absolute transformation matrices of each node

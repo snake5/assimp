@@ -110,7 +110,7 @@ public:
 
 protected:
 
-    void CollectNewChildren(aiNode* nd, std::list<aiNode*>& nodes);
+    void CollectNewChildren(aiNode* nd, std::vector<aiNode*>& nodes);
     void FindInstancedMeshes (aiNode* pNode);
 
 private:

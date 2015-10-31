@@ -351,7 +351,11 @@ protected:
 
 public:
 
-    typedef std::pair<IfcFloat, IfcFloat> ParamRange;
+	struct ParamRange
+	{
+		IfcFloat pmin;
+		IfcFloat pmax;
+	};
 
 public:
 
@@ -372,7 +376,7 @@ public:
 
     // get the range of the curve (both inclusive).
     // +inf and -inf are valid return values, the curve is not bounded in such a case.
-    virtual std::pair<IfcFloat,IfcFloat> GetParametricRange() const = 0;
+    virtual ParamRange GetParametricRange() const = 0;
     IfcFloat GetParametricRangeDelta() const;
 
     // estimate the number of sample points that this curve will require
