@@ -190,11 +190,6 @@ void ObjFileImporter::CreateDataFromImport(const ObjFile::Model* pModel, aiScene
         // Set the name of the scene
         pScene->mRootNode->mName.Set(pModel->m_ModelName);
     }
-    else
-    {
-        // This is a fatal error, so break down the application
-        ai_assert(false);
-    }
 
     // Create nodes for the whole scene
     std::vector<aiMesh*> MeshArray;
