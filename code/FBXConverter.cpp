@@ -46,7 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iterator>
 #include <sstream>
-#include <boost/tuple/tuple.hpp>
 #include <vector>
 #include "FBXParser.h"
 #include "FBXConverter.h"
@@ -2625,7 +2624,12 @@ private:
 
 
     // key (time), value, mapto (component index)
-    typedef boost::tuple<boost::shared_ptr<KeyTimeList>, boost::shared_ptr<KeyValueList>, unsigned int > KeyFrameList;
+	struct KeyFrameList
+	{
+		boost::shared_ptr<KeyTimeList> timelist;
+		boost::shared_ptr<KeyValueList> valuelist;
+		unsigned mapto;
+	};
     typedef std::vector<KeyFrameList> KeyFrameListList;
 
 
@@ -2680,7 +2684,8 @@ private:
                     }
                 }
 
-                inputs.push_back(boost::make_tuple(Keys, Values, mapto));
+				KeyFrameList kfl = {Keys, Values, mapto};
+                inputs.push_back(kfl);
             }
         }
         return inputs; // pray for NRVO :-)
@@ -2699,7 +2704,7 @@ private:
 
         size_t estimate = 0;
         BOOST_FOREACH(const KeyFrameList& kfl, inputs) {
-            estimate = std::max(estimate, kfl.get<0>()->size());
+            estimate = std::max(estimate, kfl.timelist->size());
         }
 
         keys.reserve(estimate);
@@ -2714,8 +2719,8 @@ private:
             for (size_t i = 0; i < count; ++i) {
                 const KeyFrameList& kfl = inputs[i];
 
-                if (kfl.get<0>()->size() > next_pos[i] && kfl.get<0>()->at(next_pos[i]) < min_tick) {
-                    min_tick = kfl.get<0>()->at(next_pos[i]);
+                if (kfl.timelist->size() > next_pos[i] && kfl.timelist->at(next_pos[i]) < min_tick) {
+                    min_tick = kfl.timelist->at(next_pos[i]);
                 }
             }
 
@@ -2728,7 +2733,7 @@ private:
                 const KeyFrameList& kfl = inputs[i];
 
 
-                while(kfl.get<0>()->size() > next_pos[i] && kfl.get<0>()->at(next_pos[i]) == min_tick) {
+                while(kfl.timelist->size() > next_pos[i] && kfl.timelist->at(next_pos[i]) == min_tick) {
                     ++next_pos[i];
                 }
             }
@@ -2762,8 +2767,8 @@ private:
             for (size_t i = 0; i < count; ++i) {
                 const KeyFrameList& kfl = inputs[i];
 
-                const size_t ksize = kfl.get<0>()->size();
-                if (ksize > next_pos[i] && kfl.get<0>()->at(next_pos[i]) == time) {
+                const size_t ksize = kfl.timelist->size();
+                if (ksize > next_pos[i] && kfl.timelist->at(next_pos[i]) == time) {
                     ++next_pos[i];
                 }
 
@@ -2771,11 +2776,11 @@ private:
                 const size_t id1 = next_pos[i]==ksize ? ksize-1 : next_pos[i];
 
                 // use lerp for interpolation
-                const KeyValueList::value_type valueA = kfl.get<1>()->at(id0);
-                const KeyValueList::value_type valueB = kfl.get<1>()->at(id1);
+                const KeyValueList::value_type valueA = kfl.valuelist->at(id0);
+                const KeyValueList::value_type valueB = kfl.valuelist->at(id1);
 
-                const KeyTimeList::value_type timeA = kfl.get<0>()->at(id0);
-                const KeyTimeList::value_type timeB = kfl.get<0>()->at(id1);
+                const KeyTimeList::value_type timeA = kfl.timelist->at(id0);
+                const KeyTimeList::value_type timeB = kfl.timelist->at(id1);
 
                 // do the actual interpolation in double-precision arithmetics
                 // because it is a bit sensitive to rounding errors.
@@ -2783,10 +2788,10 @@ private:
                 const float interpValue = static_cast<float>(valueA + (valueB - valueA) * factor);
 
                 if(geom) {
-                    result[kfl.get<2>()] *= interpValue;
+                    result[kfl.mapto] *= interpValue;
                 }
                 else {
-                    result[kfl.get<2>()] += interpValue;
+                    result[kfl.mapto] += interpValue;
                 }
             }
 

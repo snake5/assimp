@@ -49,7 +49,8 @@ AnimEvaluator::AnimEvaluator( const aiAnimation* pAnim)
 {
     mAnim = pAnim;
     mLastTime = 0.0;
-    mLastPositions.resize( pAnim->mNumChannels, boost::make_tuple( 0, 0, 0));
+	LastPositions lp = {0,0,0};
+    mLastPositions.resize( pAnim->mNumChannels, lp);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -80,7 +81,7 @@ void AnimEvaluator::Evaluate( double pTime)
         {
             // Look for present frame number. Search from last position if time is after the last time, else from beginning
             // Should be much quicker than always looking from start for the average use case.
-            unsigned int frame = (time >= mLastTime) ? mLastPositions[a].get<0>() : 0;
+            unsigned int frame = (time >= mLastTime) ? mLastPositions[a].p0 : 0;
             while( frame < channel->mNumPositionKeys - 1)
             {
                 if( time < channel->mPositionKeys[frame+1].mTime)
@@ -104,14 +105,14 @@ void AnimEvaluator::Evaluate( double pTime)
                 presentPosition = key.mValue;
             }
 
-            mLastPositions[a].get<0>() = frame;
+            mLastPositions[a].p0 = frame;
         }
 
         // ******** Rotation *********
         aiQuaternion presentRotation( 1, 0, 0, 0);
         if( channel->mNumRotationKeys > 0)
         {
-            unsigned int frame = (time >= mLastTime) ? mLastPositions[a].get<1>() : 0;
+            unsigned int frame = (time >= mLastTime) ? mLastPositions[a].p1 : 0;
             while( frame < channel->mNumRotationKeys - 1)
             {
                 if( time < channel->mRotationKeys[frame+1].mTime)
@@ -135,14 +136,14 @@ void AnimEvaluator::Evaluate( double pTime)
                 presentRotation = key.mValue;
             }
 
-            mLastPositions[a].get<1>() = frame;
+            mLastPositions[a].p1 = frame;
         }
 
         // ******** Scaling **********
         aiVector3D presentScaling( 1, 1, 1);
         if( channel->mNumScalingKeys > 0)
         {
-            unsigned int frame = (time >= mLastTime) ? mLastPositions[a].get<2>() : 0;
+            unsigned int frame = (time >= mLastTime) ? mLastPositions[a].p2 : 0;
             while( frame < channel->mNumScalingKeys - 1)
             {
                 if( time < channel->mScalingKeys[frame+1].mTime)
@@ -152,7 +153,7 @@ void AnimEvaluator::Evaluate( double pTime)
 
             // TODO: (thom) interpolation maybe? This time maybe even logarithmic, not linear
             presentScaling = channel->mScalingKeys[frame].mValue;
-            mLastPositions[a].get<2>() = frame;
+            mLastPositions[a].p2 = frame;
         }
 
         // build a transformation matrix from it

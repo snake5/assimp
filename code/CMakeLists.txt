@@ -71,7 +71,6 @@ SET( Boost_SRCS
   BoostWorkaround/boost/shared_ptr.hpp
   BoostWorkaround/boost/make_shared.hpp
   BoostWorkaround/boost/static_assert.hpp
-  BoostWorkaround/boost/tuple/tuple.hpp
 )
 SOURCE_GROUP(Boost FILES ${Boost_SRCS})
 

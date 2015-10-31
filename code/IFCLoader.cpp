@@ -47,7 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iterator>
 #include <limits>
-#include <boost/tuple/tuple.hpp>
 
 #ifndef ASSIMP_BUILD_NO_COMPRESSED_IFC
 #   include "../contrib/unzip/unzip.h"
