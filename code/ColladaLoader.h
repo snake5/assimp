@@ -79,6 +79,12 @@ struct ColladaMeshIndex
     }
 };
 
+struct ColladaFXMtlLink
+{
+	Collada::Effect* fx;
+	aiMaterial* mtl;
+};
+
 /** Loader class to read Collada scenes. Collada is over-engineered to death, with every new iteration bringing
  * more useless stuff, so I limited the data to what I think is useful for games.
 */
@@ -225,7 +231,7 @@ protected:
     std::vector<aiMesh*> mMeshes;
 
     /** Temporary material list */
-    std::vector<std::pair<Collada::Effect*, aiMaterial*> > newMats;
+    std::vector<ColladaFXMtlLink> newMats;
 
     /** Temporary camera list */
     std::vector<aiCamera*> mCameras;

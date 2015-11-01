@@ -941,6 +941,11 @@ void ASEImporter::ConvertMaterial(ASE::Material& mat)
 }
 
 // ------------------------------------------------------------------------------------------------
+struct VertexWeight
+{
+	unsigned vtx_id;
+	float weight;
+};
 // Build output meshes
 void ASEImporter::ConvertMeshes(ASE::Mesh& mesh, std::vector<aiMesh*>& avOutMeshes)
 {
@@ -994,9 +999,9 @@ void ASEImporter::ConvertMeshes(ASE::Mesh& mesh, std::vector<aiMesh*>& avOutMesh
                 p_pcOut->mNumFaces = (unsigned int)aiSplit[p].size();
 
                 // receive output vertex weights
-                std::vector<std::pair<unsigned int, float> > *avOutputBones = NULL;
+                std::vector<VertexWeight> *avOutputBones = NULL;
                 if (!mesh.mBones.empty())   {
-                    avOutputBones = new std::vector<std::pair<unsigned int, float> >[mesh.mBones.size()];
+                    avOutputBones = new std::vector<VertexWeight>[mesh.mBones.size()];
                 }
 
                 // allocate enough storage for faces
@@ -1024,13 +1029,13 @@ void ASEImporter::ConvertMeshes(ASE::Mesh& mesh, std::vector<aiMesh*>& avOutMesh
                                 // check whether there is a vertex weight for this vertex index
                                 if (iIndex2 < mesh.mBoneVertices.size())    {
 
-                                    for (std::vector<std::pair<int,float> >::const_iterator
+                                    for (std::vector<BoneVertex::Weight>::const_iterator
                                         blubb =  mesh.mBoneVertices[iIndex2].mBoneWeights.begin();
                                         blubb != mesh.mBoneVertices[iIndex2].mBoneWeights.end();++blubb)    {
 
                                         // NOTE: illegal cases have already been filtered out
-                                        avOutputBones[(*blubb).first].push_back(std::pair<unsigned int, float>(
-                                            iBase,(*blubb).second));
+										VertexWeight nvw = {iBase,(*blubb).weight};
+                                        avOutputBones[(*blubb).bone_id].push_back(nvw);
                                     }
                                 }
                             }
@@ -1087,9 +1092,9 @@ void ASEImporter::ConvertMeshes(ASE::Mesh& mesh, std::vector<aiMesh*>& avOutMesh
 
                             for (unsigned int captainkirk = 0; captainkirk < pc->mNumWeights;++captainkirk)
                             {
-                                const std::pair<unsigned int,float>& ref = avOutputBones[mrspock][captainkirk];
-                                pc->mWeights[captainkirk].mVertexId = ref.first;
-                                pc->mWeights[captainkirk].mWeight = ref.second;
+                                const VertexWeight& ref = avOutputBones[mrspock][captainkirk];
+                                pc->mWeights[captainkirk].mVertexId = ref.vtx_id;
+                                pc->mWeights[captainkirk].mWeight = ref.weight;
                             }
                             ++pcBone;
                         }
@@ -1186,14 +1191,14 @@ void ASEImporter::ConvertMeshes(ASE::Mesh& mesh, std::vector<aiMesh*>& avOutMesh
             for (std::vector<BoneVertex>::const_iterator harrypotter =  mesh.mBoneVertices.begin();
                 harrypotter != mesh.mBoneVertices.end();++harrypotter,++quak)   {
 
-                for (std::vector<std::pair<int,float> >::const_iterator
+                for (std::vector<BoneVertex::Weight>::const_iterator
                     ronaldweasley  = (*harrypotter).mBoneWeights.begin();
                     ronaldweasley != (*harrypotter).mBoneWeights.end();++ronaldweasley)
                 {
                     aiVertexWeight weight;
                     weight.mVertexId = quak;
-                    weight.mWeight = (*ronaldweasley).second;
-                    avBonesOut[(*ronaldweasley).first].push_back(weight);
+                    weight.mWeight = (*ronaldweasley).weight;
+                    avBonesOut[(*ronaldweasley).bone_id].push_back(weight);
                 }
             }
 

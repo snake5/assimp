@@ -505,16 +505,16 @@ void ColladaLoader::BuildMeshesForNode( const ColladaParser& pParser, const Coll
                 matIdx = 0;
 
             if (table && !table->mMap.empty() ) {
-                std::pair<Collada::Effect*, aiMaterial*>&  mat = newMats[matIdx];
+                ColladaFXMtlLink&  mat = newMats[matIdx];
 
                 // Iterate through all texture channels assigned to the effect and
                 // check whether we have mapping information for it.
-                ApplyVertexToEffectSemanticMapping(mat.first->mTexDiffuse,    *table);
-                ApplyVertexToEffectSemanticMapping(mat.first->mTexAmbient,    *table);
-                ApplyVertexToEffectSemanticMapping(mat.first->mTexSpecular,   *table);
-                ApplyVertexToEffectSemanticMapping(mat.first->mTexEmissive,   *table);
-                ApplyVertexToEffectSemanticMapping(mat.first->mTexTransparent,*table);
-                ApplyVertexToEffectSemanticMapping(mat.first->mTexBump,       *table);
+                ApplyVertexToEffectSemanticMapping(mat.fx->mTexDiffuse,    *table);
+                ApplyVertexToEffectSemanticMapping(mat.fx->mTexAmbient,    *table);
+                ApplyVertexToEffectSemanticMapping(mat.fx->mTexSpecular,   *table);
+                ApplyVertexToEffectSemanticMapping(mat.fx->mTexEmissive,   *table);
+                ApplyVertexToEffectSemanticMapping(mat.fx->mTexTransparent,*table);
+                ApplyVertexToEffectSemanticMapping(mat.fx->mTexBump,       *table);
             }
 
             // built lookup index of the Mesh-Submesh-Material combination
@@ -672,7 +672,7 @@ aiMesh* ColladaLoader::CreateMesh( const ColladaParser& pParser, const Collada::
         std::vector<std::vector<aiVertexWeight> > dstBones( numBones);
 
         // build a temporary array of pointers to the start of each vertex's weights
-        typedef std::vector< std::pair<size_t, size_t> > IndexPairVector;
+        typedef std::vector< Collada::JointWeightPair > IndexPairVector;
         std::vector<IndexPairVector::const_iterator> weightStartPerVertex;
         weightStartPerVertex.resize(pSrcController->mWeightCounts.size(),pSrcController->mWeights.end());
 
@@ -695,8 +695,8 @@ aiMesh* ColladaLoader::CreateMesh( const ColladaParser& pParser, const Collada::
 
             for( size_t b = 0; b < pairCount; ++b, ++iit)
             {
-                size_t jointIndex = iit->first;
-                size_t vertexIndex = iit->second;
+                size_t jointIndex = iit->joint_id;
+                size_t vertexIndex = iit->weight_id;
 
                 float weight = ReadFloat( weightsAcc, weights, vertexIndex, 0);
 
@@ -849,7 +849,7 @@ void ColladaLoader::StoreSceneMaterials( aiScene* pScene)
     if (newMats.size() > 0) {
         pScene->mMaterials = new aiMaterial*[newMats.size()];
         for (unsigned int i = 0; i < newMats.size();++i)
-            pScene->mMaterials[i] = newMats[i].second;
+            pScene->mMaterials[i] = newMats[i].mtl;
 
         newMats.clear();
     }
@@ -1294,11 +1294,11 @@ void ColladaLoader::AddTexture ( aiMaterial& mat, const ColladaParser& pParser,
 // Fills materials from the collada material definitions
 void ColladaLoader::FillMaterials( const ColladaParser& pParser, aiScene* /*pScene*/)
 {
-    for (std::vector<std::pair<Collada::Effect*, aiMaterial*> >::iterator it = newMats.begin(),
+    for (std::vector<ColladaFXMtlLink>::iterator it = newMats.begin(),
         end = newMats.end(); it != end; ++it)
     {
-        aiMaterial&  mat = (aiMaterial&)*it->second;
-        Collada::Effect& effect = *it->first;
+        aiMaterial&  mat = (aiMaterial&)*it->mtl;
+        Collada::Effect& effect = *it->fx;
 
         // resolve shading mode
         int shadeMode;
@@ -1418,7 +1418,8 @@ void ColladaLoader::BuildMaterials( ColladaParser& pParser, aiScene* /*pScene*/)
 
         // store the material
         mMaterialIndexByName[matIt->first] = newMats.size();
-        newMats.push_back( std::pair<Collada::Effect*, aiMaterial*>( &effect,mat) );
+		ColladaFXMtlLink nfxmtl = {&effect,mat};
+        newMats.push_back( nfxmtl );
     }
     // ScenePreprocessor generates a default material automatically if none is there.
     // All further code here in this loader works well without a valid material so

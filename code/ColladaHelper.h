@@ -377,6 +377,12 @@ enum PrimitiveType
     Prim_Polygon
 };
 
+struct JointWeightPair
+{
+	size_t joint_id;
+	size_t weight_id;
+};
+
 /** A skeleton controller to deform a mesh with the use of joints */
 struct Controller
 {
@@ -401,7 +407,7 @@ struct Controller
     std::vector<size_t> mWeightCounts;
 
     // JointIndex-WeightIndex pairs for all vertices
-    std::vector< std::pair<size_t, size_t> > mWeights;
+    std::vector< JointWeightPair > mWeights;
 };
 
 /** A collada material. Pretty much the only member is a reference to an effect. */

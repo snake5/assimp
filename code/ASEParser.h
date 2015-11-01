@@ -149,9 +149,14 @@ struct Bone
 /** Helper structure to represent an ASE file bone vertex */
 struct BoneVertex
 {
+	struct Weight
+	{
+		int bone_id;
+		float weight;
+	};
     //! Bone and corresponding vertex weight.
     //! -1 for unrequired bones ....
-    std::vector<std::pair<int,float> > mBoneWeights;
+    std::vector<Weight> mBoneWeights;
 
     //! Position of the bone vertex.
     //! MUST be identical to the vertex position

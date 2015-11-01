@@ -214,7 +214,11 @@ class BlobIOSystem : public IOSystem
 {
 
     friend class BlobIOStream;
-    typedef std::pair<std::string, aiExportDataBlob*> BlobEntry;
+	struct BlobEntry
+	{
+		std::string name;
+		aiExportDataBlob* blob;
+	};
 
 public:
 
@@ -225,7 +229,7 @@ public:
     virtual ~BlobIOSystem()
     {
         BOOST_FOREACH(BlobEntry& blobby, blobs) {
-            delete blobby.second;
+            delete blobby.blob;
         }
     }
 
@@ -244,8 +248,8 @@ public:
         // one must be the master
         aiExportDataBlob* master = NULL, *cur;
         BOOST_FOREACH(const BlobEntry& blobby, blobs) {
-            if (blobby.first == AI_BLOBIO_MAGIC) {
-                master = blobby.second;
+            if (blobby.name == AI_BLOBIO_MAGIC) {
+                master = blobby.blob;
                 break;
             }
         }
@@ -258,16 +262,16 @@ public:
 
         cur = master;
         BOOST_FOREACH(const BlobEntry& blobby, blobs) {
-            if (blobby.second == master) {
+            if (blobby.blob == master) {
                 continue;
             }
 
-            cur->next = blobby.second;
+            cur->next = blobby.blob;
             cur = cur->next;
 
             // extract the file extension from the file written
-            const std::string::size_type s = blobby.first.find_first_of('.');
-            cur->name.Set(s == std::string::npos ? blobby.first : blobby.first.substr(s+1));
+            const std::string::size_type s = blobby.name.find_first_of('.');
+            cur->name.Set(s == std::string::npos ? blobby.name : blobby.name.substr(s+1));
         }
 
         // give up blob ownership
@@ -315,7 +319,8 @@ private:
         // we don't know in which the files are closed, so we
         // can't reliably say that the first must be the master
         // file ...
-        blobs.push_back( BlobEntry(filename,child->GetBlob()) );
+		BlobEntry be = {filename, child->GetBlob()};
+        blobs.push_back( be );
     }
 
 private:

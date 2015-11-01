@@ -431,24 +431,24 @@ void Parser::ParseLV1SoftSkinBlock()
                             ParseString(bone,"*MESH_SOFTSKINVERTS.Bone");
 
                             // Find the bone in the mesh's list
-                            std::pair<int,float> me;
-                            me.first = -1;
+                            BoneVertex::Weight me;
+                            me.bone_id = -1;
 
                             for (unsigned int n = 0; n < curMesh->mBones.size();++n)
                             {
                                 if (curMesh->mBones[n].mName == bone)
                                 {
-                                    me.first = n;
+                                    me.bone_id = n;
                                     break;
                                 }
                             }
-                            if (-1 == me.first)
+                            if (-1 == me.bone_id)
                             {
                                 // We don't have this bone yet, so add it to the list
-                                me.first = (int)curMesh->mBones.size();
+                                me.bone_id = (int)curMesh->mBones.size();
                                 curMesh->mBones.push_back(ASE::Bone(bone));
                             }
-                            ParseLV4MeshFloat( me.second );
+                            ParseLV4MeshFloat( me.weight );
 
                             // Add the new bone weight to list
                             vert.mBoneWeights.push_back(me);
@@ -1607,19 +1607,19 @@ void Parser::ParseLV4MeshBonesVertices(unsigned int iNumVertices,ASE::Mesh& mesh
                 float afVert[3];
                 ParseLV4MeshFloatTriple(afVert);
 
-                std::pair<int,float> pairOut;
+                BoneVertex::Weight pairOut;
                 while (true)
                 {
                     // first parse the bone index ...
                     if (!SkipSpaces(&filePtr))break;
-                    pairOut.first = strtoul10(filePtr,&filePtr);
+                    pairOut.bone_id = strtoul10(filePtr,&filePtr);
 
                     // then parse the vertex weight
                     if (!SkipSpaces(&filePtr))break;
-                    filePtr = fast_atoreal_move<float>(filePtr,pairOut.second);
+                    filePtr = fast_atoreal_move<float>(filePtr,pairOut.weight);
 
                     // -1 marks unused entries
-                    if (-1 != pairOut.first)
+                    if (-1 != pairOut.bone_id)
                     {
                         mesh.mBoneVertices[iIndex].mBoneWeights.push_back(pairOut);
                     }

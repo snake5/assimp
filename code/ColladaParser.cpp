@@ -661,15 +661,15 @@ void ColladaParser::ReadControllerWeights( Collada::Controller& pController)
                 // read JointIndex - WeightIndex pairs
                 const char* text = GetTextContent();
 
-                for( std::vector< std::pair<size_t, size_t> >::iterator it = pController.mWeights.begin(); it != pController.mWeights.end(); ++it)
+                for( std::vector< JointWeightPair >::iterator it = pController.mWeights.begin(); it != pController.mWeights.end(); ++it)
                 {
                     if( *text == 0)
                         ThrowException( "Out of data while reading <vertex_weights>");
-                    it->first = strtoul10( text, &text);
+                    it->joint_id = strtoul10( text, &text);
                     SkipSpacesAndLineEnd( &text);
                     if( *text == 0)
                         ThrowException( "Out of data while reading <vertex_weights>");
-                    it->second = strtoul10( text, &text);
+                    it->weight_id = strtoul10( text, &text);
                     SkipSpacesAndLineEnd( &text);
                 }
 
