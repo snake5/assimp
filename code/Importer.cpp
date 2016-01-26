@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2015, assimp team
+Copyright (c) 2006-2016, assimp team
 
 All rights reserved.
 
@@ -90,6 +90,8 @@ using namespace Assimp::Formatter;
 namespace Assimp {
     // ImporterRegistry.cpp
     void GetImporterInstanceList(std::vector< BaseImporter* >& out);
+	void DeleteImporterInstanceList(std::vector< BaseImporter* >& out);
+
     // PostStepRegistry.cpp
     void GetPostProcessingStepInstanceList(std::vector< BaseProcess* >& out);
 }
@@ -140,7 +142,7 @@ void AllocateFromAssimpHeap::operator delete[] ( void* data)    {
 // ------------------------------------------------------------------------------------------------
 // Importer constructor.
 Importer::Importer()
-{
+ : pimpl( NULL ) {
     // allocate the pimpl first
     pimpl = new ImporterPimpl();
 
@@ -173,8 +175,7 @@ Importer::Importer()
 Importer::~Importer()
 {
     // Delete all import plugins
-    for( unsigned int a = 0; a < pimpl->mImporter.size(); a++)
-        delete pimpl->mImporter[a];
+	DeleteImporterInstanceList(pimpl->mImporter);
 
     // Delete all post-processing plug-ins
     for( unsigned int a = 0; a < pimpl->mPostProcessingSteps.size(); a++)
@@ -197,7 +198,7 @@ Importer::~Importer()
 // ------------------------------------------------------------------------------------------------
 // Copy constructor - copies the config of another Importer, not the scene
 Importer::Importer(const Importer &other)
-{
+	: pimpl(NULL) {
     new(this) Importer();
 
     pimpl->mIntProperties    = other.pimpl->mIntProperties;
@@ -491,7 +492,7 @@ const aiScene* Importer::ReadFileFromMemory( const void* pBuffer,
         pHint = "";
     }
 
-    if (!pBuffer || !pLength || strlen(pHint) > 100) {
+    if (!pBuffer || !pLength || strlen(pHint) > MaxLenHint ) {
         pimpl->mErrorString = "Invalid parameters passed to ReadFileFromMemory()";
         return NULL;
     }
@@ -503,8 +504,9 @@ const aiScene* Importer::ReadFileFromMemory( const void* pBuffer,
     SetIOHandler(new MemoryIOSystem((const uint8_t*)pBuffer,pLength));
 
     // read the file and recover the previous IOSystem
-    char fbuff[128];
-    sprintf(fbuff,"%s.%s",AI_MEMORYIO_MAGIC_FILENAME,pHint);
+    static const size_t BufferSize(Importer::MaxLenHint + 28);
+    char fbuff[ BufferSize ];
+    ai_snprintf(fbuff, BufferSize, "%s.%s",AI_MEMORYIO_MAGIC_FILENAME,pHint);
 
     ReadFile(fbuff,pFlags);
     SetIOHandler(io);
@@ -1112,4 +1114,3 @@ void Importer::GetMemoryRequirements(aiMemoryInfo& in) const
     }
     in.total += in.materials;
 }
-

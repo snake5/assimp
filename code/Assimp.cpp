@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2015, assimp team
+Copyright (c) 2006-2016, assimp team
 
 All rights reserved.
 
@@ -95,6 +95,8 @@ namespace Assimp
     /** will return all registered importers. */
     void GetImporterInstanceList(std::vector< BaseImporter* >& out);
 
+    /** will delete all registered importers. */
+    void DeleteImporterInstanceList(std::vector< BaseImporter* >& out);
 } // namespace assimp
 
 
@@ -646,6 +648,8 @@ ASSIMP_API C_STRUCT const aiImporterDesc* aiGetImporterDesc( const char *extensi
             break;
         }
     }
+
+    DeleteImporterInstanceList(out);
 
     return desc;
 }

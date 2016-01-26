@@ -112,6 +112,7 @@ SET( Common_SRCS
   StreamReader.h
   StreamWriter.h
   StringComparison.h
+  StringUtils.h
   SGSpatialSort.cpp
   SGSpatialSort.h
   VertexTriangleAdjacency.cpp
@@ -568,6 +569,11 @@ ADD_ASSIMP_IMPORTER(RAW
   RawLoader.h
 )
 
+ADD_ASSIMP_IMPORTER(SIB
+  SIBImporter.cpp
+  SIBImporter.h
+)
+
 ADD_ASSIMP_IMPORTER(SMD
   SMDLoader.cpp
   SMDLoader.h
@@ -605,6 +611,19 @@ ADD_ASSIMP_EXPORTER(X
   XFileHelper.h
   XFileExporter.h
   XFileExporter.cpp
+)
+
+ADD_ASSIMP_IMPORTER(GLTF
+  glTFAsset.h
+  glTFAsset.inl
+  glTFAssetWriter.h
+  glTFAssetWriter.inl
+
+  glTFImporter.cpp
+  glTFImporter.h
+  
+  glTFExporter.h
+  glTFExporter.cpp
 )
 
 ADD_ASSIMP_EXPORTER(STEP
@@ -687,6 +706,8 @@ SET ( openddl_parser_SRCS
   ../contrib/openddlparser/include/openddlparser/Value.h
 )
 SOURCE_GROUP( openddl_parser FILES ${openddl_parser_SRCS})
+
+INCLUDE_DIRECTORIES( "../contrib/rapidjson/include" )
 
 # VC2010 fixes
 if(MSVC10)
@@ -784,8 +805,10 @@ if( MSVC )
     set(MSVC_PREFIX "vc110")
   elseif( MSVC12 )
     set(MSVC_PREFIX "vc120")
+  elseif( MSVC14 )
+    set(MSVC_PREFIX "vc140")
   else()
-    set(MSVC_PREFIX "vc130")
+    set(MSVC_PREFIX "vc150")
   endif()
   set(LIBRARY_SUFFIX "${ASSIMP_LIBRARY_SUFFIX}-${MSVC_PREFIX}-mt" CACHE STRING "the suffix for the assimp windows library")
 endif()
@@ -817,7 +840,7 @@ INSTALL( TARGETS assimp
 INSTALL( FILES ${PUBLIC_HEADERS} DESTINATION ${ASSIMP_INCLUDE_INSTALL_DIR}/assimp COMPONENT assimp-dev)
 INSTALL( FILES ${COMPILER_HEADERS} DESTINATION ${ASSIMP_INCLUDE_INSTALL_DIR}/assimp/Compiler COMPONENT assimp-dev)
 if (ASSIMP_ANDROID_JNIIOSYSTEM)
-  INSTALL(FILES ${HEADER_PATH}/../${ASSIMP_ANDROID_JNIIOSYSTEM_PATH}/AndroidJNIIOSystem.h
+  INSTALL(FILES ${HEADER_PATH}/${ASSIMP_ANDROID_JNIIOSYSTEM_PATH}/AndroidJNIIOSystem.h
     DESTINATION ${ASSIMP_INCLUDE_INSTALL_DIR}
     COMPONENT assimp-dev)
 endif(ASSIMP_ANDROID_JNIIOSYSTEM)
